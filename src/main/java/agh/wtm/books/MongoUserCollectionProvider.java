@@ -2,8 +2,13 @@ package agh.wtm.books;
 
 import agh.wtm.books.model.User;
 import com.mongodb.ConnectionString;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.client.*;
+import com.mongodb.MongoClientURI;
+
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -15,8 +20,8 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 public class MongoUserCollectionProvider {
 
-    public static final String CONNECTION_STRING = "mongodb://localhost:27017";
     public static final String DATABASE = "bookOrganizer";
+    public static final String CONNECTION_STRING = "mongodb+srv://RWuser:3usJZpQtsLAfFWsW@bookorganizer-hl9sd.mongodb.net/bookOrganizer?retryWrites=true&w=majority";
     public static final String COLLECTION = "users";
 
     private static MongoClient mongoClient;
@@ -27,16 +32,14 @@ public class MongoUserCollectionProvider {
 
     public static MongoCollection<User> getUsersCollection() {
         if (mongoClient == null) {
-            CodecRegistry pojoCodecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(),
-                    fromProviders(PojoCodecProvider.builder().automatic(true).build()));
-            MongoClientSettings settings = MongoClientSettings.builder()
-                    .codecRegistry(pojoCodecRegistry)
-                    .applyConnectionString(new ConnectionString(CONNECTION_STRING))
-                    .build();
-            mongoClient = MongoClients.create(settings);
+            MongoClientURI uri = new MongoClientURI(CONNECTION_STRING);
+            mongoClient = new MongoClient(uri);
         }
+
         MongoDatabase database = mongoClient.getDatabase(DATABASE);
-        MongoCollection<User> collection = database.getCollection(COLLECTION, User.class);
+        CodecRegistry pojoCodecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(),
+                fromProviders(PojoCodecProvider.builder().automatic(true).build()));
+        MongoCollection<User> collection = database.getCollection(COLLECTION, User.class).withCodecRegistry(pojoCodecRegistry);
 
         return collection;
     }
